@@ -30,12 +30,22 @@ php bin/console doctrine:database:create
 php bin/console make:migration
 php bin/console doctrine:migrations:migrate
 
+## Lancer le serveur Symfony
+php bin/console server:start 
 
-## Créer un jeu de données
-Créer dans la base de données les utilisateurs et hamsters
+## Lancer les fixtures
+php bin/console d:f:l
+
+## Création clé publique et privée pour le JWT
+- Créer un fichier jwt dans le dossier config (si cela n'est pas déjà fait)
+- Générer les clés :
+        openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096
+        openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout 
+- Placer la passphrase choisie dans le .env.local sous la variable JWT_PASSPHRASE
 
 ## Postman
-sur la route /api/login , générer un JWT et le mettre dans authorization des différentes routes avec bearer token et coller sa valeur
+sur la route /api/login , générer un JWT et le mettre dans l'authorization des différentes routes avec bearer token et coller sa valeur
+Vous pouvez à présent tester les différentes routes
 
 
 
