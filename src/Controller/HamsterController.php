@@ -3,17 +3,22 @@
 namespace App\Controller;
 
 use App\Entity\Hamster;
+use App\Repository\HamsterRepository;
+use App\Service\HamsterService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class HamsterController extends AbstractController
 {
     // Return the list of hamsters of current user
     #[Route('/api/hamsters', name: '_hamsters_user', methods: ['GET'])]
+    // Admins already have ROLE_USER
+    #[IsGranted('ROLE_USER',null, "Vous n'avez pas le droit d'accéder à cette ressource", 403)]
     public function getHamstersFromCurrentUser(): JsonResponse
     {   
         $user = $this->getUser();
@@ -30,6 +35,7 @@ final class HamsterController extends AbstractController
     }
 
     #[Route('/api/hamsters/{id}', name: 'hamster_by_id', methods: ['GET'])]
+    #[IsGranted('ROLE_USER',null, "Vous n'avez pas le droit d'accéder à cette ressource", 403)]
     public function getHamsterById(Hamster $hamster): JsonResponse
     {   
         return $this->json([
@@ -44,41 +50,77 @@ final class HamsterController extends AbstractController
     }
 
     #[Route('/api/hamsters/reproduce', name: 'hamster_add', methods: ['POST'])]
-    public function createHamster(Request $request, EntityManagerInterface $em): JsonResponse
+    #[IsGranted('ROLE_USER',null, "Vous n'avez pas le droit d'accéder à cette ressource", 403)]
+    public function createHamster(Request $request, EntityManagerInterface $em, HamsterRepository $hr, HamsterService $hs): JsonResponse
     {   
         //get the current user and ver
         //body request
         $content = $request->getContent();
+        $user = $this->getUser();
         $data = json_decode($content, true);
         $idHamster1 = $data['idHamster1'] ?? null;
         $idHamster2 = $data['idHamster2'] ?? null;
 
-        
-        
-        // Déserialisation => transformer du texte en ojbet / sérialiser => transformer un objet en texte
-        
-        $author = $serializer->deserialize($content, Author::class, 'json',[]);
-        $errors = $validator->validate($author);
-        if (count($errors) > 0) {
-            /*
-            * Uses a __toString method on the $errors variable which is a
-            * ConstraintViolationList object. This gives us a nice string
-            * for debugging.
-            */
+        // Find hamster objects
+        $hamster1 = $hr->findOneById($idHamster1);
+        $hamster2 = $hr->findOneById($idHamster2);
 
-            return $this->json([
-            'errors' => $errors,
-        ], Response::HTTP_BAD_REQUEST);
+        if($hamster1->getOwner() === $user && $hamster1->getOwner() === $user){
+            // Verify if hasmters are male and female
+            if(($hamster1->getGenre() === "f" && $hamster2->getGenre() === "m") || ($hamster1->getGenre() === "m" && $hamster2->getGenre() === "f")){
+                // Verify if the both are active
+                if($hamster1->isActive() === true && $hamster2->isActive() === true)
+                {
+                    $genres = [
+                        'f',
+                        'm'
+                    ];
+                    $randGenre = $genres[array_rand($genres)];
+
+                    $newHamster = new Hamster();
+                    $newHamster->setGenre($randGenre);
+                    $newHamster->setHunger(100);
+                    $newHamster->setAge(0);
+                    $newHamster->setActive(true);
+                    $newHamster->setName($hs->getRandomName()); 
+                    $newHamster->setOwner($user); 
+                    $em->persist($newHamster);
+                    $em->flush();
+                    return $this->json(
+                        [
+                            'newHamster' => $newHamster,
+                        ], 
+                        Response::HTTP_CREATED,
+                        // Pour les headers
+                        [],
+                        // On appelle ce groupe => on veut que les champs concernés par ce groupe
+                        ['groups' => 'new_rabbit']
+                    );
+                }
+                return $this->json(
+                    [
+                        'message' => "Les hamsters doivent être actifs",
+                    ], 
+                    Response::HTTP_BAD_REQUEST
+                );
+            }else{
+                return $this->json(
+                    [
+                        'message' => "Les hamsters doivent être de genre opposés",
+                    ], Response::HTTP_BAD_REQUEST
+                );
+            }            
         }
 
-        $em->persist($newHamster);
-        $em->flush();
-        return $this->json([
-            'newHamster' => $newHamster,
-        ], Response::HTTP_CREATED);
+        return $this->json(
+            [
+                'message' => "Vous devez être le propriétaire des hamsters",
+            ], Response::HTTP_BAD_REQUEST
+        );
     }
 
     #[Route('/api/hamsters/{id}/sell', name: 'hamster_sell', methods: ['POST'])]
+    #[IsGranted('ROLE_USER',null, "Vous n'avez pas le droit d'accéder à cette ressource", 403)]
     public function sellHamster(Hamster $hamster,EntityManagerInterface $em): JsonResponse
     {  
         $user = $this->getUser();
@@ -111,6 +153,7 @@ final class HamsterController extends AbstractController
     }
 
     #[Route('/api/hamsters/{id}/feed', name: 'hamster_feed', methods: ['POST'])]
+    #[IsGranted('ROLE_USER',null, "Vous n'avez pas le droit d'accéder à cette ressource", 403)]
     public function feedHamster(Hamster $hamster,EntityManagerInterface $em): JsonResponse
     {   
   
@@ -139,6 +182,7 @@ final class HamsterController extends AbstractController
     }
 
     #[Route('/api/hamsters/sleep/{nbDays}', name: 'hamster_feed', methods: ['POST'])]
+    #[IsGranted('ROLE_USER',null, "Vous n'avez pas le droit d'accéder à cette ressource", 403)]
     public function sleepHamsters(int $nbDays,EntityManagerInterface $em): JsonResponse
     {   
         $user = $this->getUser();
@@ -157,7 +201,8 @@ final class HamsterController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
-  #[Route('/api/hamsters/{id}/rename', name: 'hamster_rename', methods: ['PUT'])]
+    #[Route('/api/hamsters/{id}/rename', name: 'hamster_rename', methods: ['PUT'])]
+    #[IsGranted('ROLE_USER',null, "Vous n'avez pas le droit d'accéder à cette ressource", 403)]  
     public function renameHamster(Hamster $hamster,Request $request,EntityManagerInterface $em): JsonResponse
     {   
   

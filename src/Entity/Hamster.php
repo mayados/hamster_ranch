@@ -22,7 +22,7 @@ class Hamster
         min: 2,
         minMessage: "Le champ doit contenir au moins {{ limit }} caractères."
     )]
-    #[Groups(['user_details'])]
+    #[Groups(['user_details','new_rabbit'])]
     private ?string $name = null;
 
     #[ORM\Column]
@@ -32,6 +32,7 @@ class Hamster
         max: 100,
         notInRangeMessage: "La valeur de faim doit être comprise entre {{ min }} et {{ max }}."
     )]
+    #[Groups(['new_rabbit'])]
     private ?int $hunger = null;
 
     #[ORM\Column]
@@ -41,17 +42,21 @@ class Hamster
         max: 500,
         notInRangeMessage: "L'âge doit être compris entre {{ min }} et {{ max }}."
     )]
+    #[Groups(['new_rabbit'])]
     private ?int $age = null;
 
     #[ORM\Column(length: 1)]
     #[Assert\NotBlank(message: "Le genre ne peut pas être vide.")]
+    #[Groups(['new_rabbit'])]
     private ?string $genre = null;
 
     #[ORM\Column]
+    #[Groups(['new_rabbit'])]
     private ?bool $active = null;
 
     #[ORM\ManyToOne(inversedBy: 'hamsters')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['new_rabbit'])]
     private ?User $owner = null;
 
     public function getId(): ?int

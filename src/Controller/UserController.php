@@ -14,8 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
-use Symfony\Component\Security\Http\Attribute\IsGranted as AttributeIsGranted;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class UserController extends AbstractController
 {
@@ -78,6 +77,7 @@ final class UserController extends AbstractController
     }
 
     #[Route('/api/user', name: 'user_details', methods: ['GET'])]
+    #[IsGranted('ROLE_USER',null, "Vous n'avez pas le droit d'accéder à cette ressource", 403)]
     public function getUserDetails(): JsonResponse
     {   
         $user = $this->getUser();
@@ -100,7 +100,7 @@ final class UserController extends AbstractController
         $em->remove($user);
         $em->flush();
         return $this->json([
-            'message' => "successfully removed",
+            'message' => "L'utilisateur a été supprimé avec succès",
         ],200 );
     }
     
