@@ -30,10 +30,9 @@ final class UserController extends AbstractController
     #[Route('/api/register', name: 'app_register', methods: ['POST'])]
     public function addUser(Request $request, SerializerInterface $serializer, EntityManagerInterface $em, ValidatorInterface $validator, HamsterService $hs): JsonResponse
     {
-           //body request
+        //body request
         $content = $request->getContent();
         // Déserialisation => transformer du texte en ojbet / sérialiser => transformer un objet en texte
-        
         $user = $serializer->deserialize($content, User::class, 'json',[]);
         $password = $user->getPassword();
         if($user->getRoles()[0] === "ROLE_USER"){
@@ -54,7 +53,7 @@ final class UserController extends AbstractController
         foreach ($genres as $genre) {
             $hamster = new Hamster();
             $hamster->setGenre($genre);
-            $hamster->setHunger(0);
+            $hamster->setHunger(100);
             $hamster->setAge(0);
             $hamster->setActive(true);
             $hamster->setName($hs->getRandomName()); 

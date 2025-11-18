@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Repository\HamsterRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+
 
 #[ORM\Entity(repositoryClass: HamsterRepository::class)]
 class Hamster
@@ -15,16 +17,34 @@ class Hamster
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
+    #[Assert\NotBlank(message: "Le champ ne peut pas être vide.")]
+    #[Assert\Length(
+        min: 2,
+        minMessage: "Le champ doit contenir au moins {{ limit }} caractères."
+    )]
     #[Groups(['user_details'])]
     private ?string $name = null;
 
     #[ORM\Column]
+    #[Assert\NotNull(message: "Le champ ne peut pas être vide.")]
+    #[Assert\Range(
+        min: 0,
+        max: 100,
+        notInRangeMessage: "La valeur de faim doit être comprise entre {{ min }} et {{ max }}."
+    )]
     private ?int $hunger = null;
 
     #[ORM\Column]
+    #[Assert\NotNull(message: "Le champ ne peut pas être vide.")]
+    #[Assert\Range(
+        min: 0,
+        max: 500,
+        notInRangeMessage: "L'âge doit être compris entre {{ min }} et {{ max }}."
+    )]
     private ?int $age = null;
 
     #[ORM\Column(length: 1)]
+    #[Assert\NotBlank(message: "Le genre ne peut pas être vide.")]
     private ?string $genre = null;
 
     #[ORM\Column]
