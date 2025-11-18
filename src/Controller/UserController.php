@@ -101,7 +101,7 @@ final class UserController extends AbstractController
         $em->flush();
         return $this->json([
             'message' => "successfully removed",
-        ]);
+        ],200 );
     }
     
 }
